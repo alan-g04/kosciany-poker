@@ -74,7 +74,7 @@ This repo's `render.yaml` is a two-service Docker blueprint.
 4. Set env vars on each service before the first build finishes:
    - **broker**: `ALLOWED_ORIGINS=https://kosciany-poker-web.onrender.com` (or the actual web URL).
    - **web**: `VITE_WS_URL=wss://kosciany-poker-broker.onrender.com/ws` (matches the broker URL).
-5. Trigger deploys. The frontend bakes `VITE_WS_URL` into the JS bundle at build time, so changing it requires a redeploy of the web service.
+5. Trigger deploys. The frontend bundle is built with the literal placeholder `__VITE_WS_URL__`; the nginx container's entrypoint script (`frontend/docker-entrypoint.d/10-set-ws-url.sh`) seds the real `VITE_WS_URL` into the static assets at container start. Updating the env var only needs a container restart, not a rebuild.
 
 The free Render plan spins services down after idle — first connect may take ~30s while both warm up.
 

@@ -16,9 +16,11 @@ services:
       - key: ALLOWED_ORIGINS
         sync: false
 
-  # SPA served by nginx. Build-time VITE_WS_URL bakes the broker URL into the
-  # bundle (e.g. wss://kosciany-poker-broker.onrender.com/ws). Set it in the
-  # Render UI before the first deploy.
+  # SPA served by nginx. The bundle is built with a literal `__VITE_WS_URL__`
+  # placeholder; nginx's docker-entrypoint script (10-set-ws-url.sh) seds the
+  # real broker URL into the JS at container start using the runtime env var.
+  # This avoids needing Docker build args, which Render's blueprint doesn't
+  # support for Docker services.
   - type: web
     name: kosciany-poker-web
     runtime: docker
@@ -29,5 +31,3 @@ services:
     envVars:
       - key: VITE_WS_URL
         sync: false
-    dockerBuildArgs:
-      VITE_WS_URL: ${VITE_WS_URL}
