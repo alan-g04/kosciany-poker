@@ -1,0 +1,33 @@
+services:
+  # Stateless WebSocket broker (FastAPI + Uvicorn).
+  - type: web
+    name: kosciany-poker-broker
+    runtime: docker
+    rootDir: backend
+    dockerfilePath: ./Dockerfile
+    plan: free
+    region: frankfurt
+    healthCheckPath: /health
+    envVars:
+      - key: PORT
+        value: "8000"
+      # Comma-separated list of origins allowed by CORS. Set to your web
+      # host (e.g. https://kosciany-poker-web.onrender.com) in the Render UI.
+      - key: ALLOWED_ORIGINS
+        sync: false
+
+  # SPA served by nginx. Build-time VITE_WS_URL bakes the broker URL into the
+  # bundle (e.g. wss://kosciany-poker-broker.onrender.com/ws). Set it in the
+  # Render UI before the first deploy.
+  - type: web
+    name: kosciany-poker-web
+    runtime: docker
+    rootDir: frontend
+    dockerfilePath: ./Dockerfile
+    plan: free
+    region: frankfurt
+    envVars:
+      - key: VITE_WS_URL
+        sync: false
+    dockerBuildArgs:
+      VITE_WS_URL: ${VITE_WS_URL}
