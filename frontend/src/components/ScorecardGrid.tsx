@@ -35,6 +35,7 @@ function Cell({ player, column, category, bottomLockedForColumn, readOnly, onSco
   const dice = useGameStore((s) => s.dice);
   const firstRoll = useGameStore((s) => s.firstRoll);
   const rollsThisTurn = useGameStore((s) => s.rollsThisTurn);
+  const turnScored = useGameStore((s) => s.turnScored);
   const scoreCell = useGameStore((s) => s.scoreCell);
 
   const entry = player.columns[column][category];
@@ -42,7 +43,7 @@ function Cell({ player, column, category, bottomLockedForColumn, readOnly, onSco
   const locked = isBottom && bottomLockedForColumn;
   const hasRolled = rollsThisTurn > 0;
   const selectable =
-    !readOnly && !locked && hasRolled && isCellSelectable(player, column, category);
+    !readOnly && !locked && hasRolled && !turnScored && isCellSelectable(player, column, category);
   const preview = selectable ? previewCellScore(dice, category, firstRoll) : null;
 
   let body: React.ReactNode = null;
@@ -140,8 +141,8 @@ export function ScorecardGrid({ player, readOnly = false, onScored }: ScorecardG
           </div>
         ))}
 
-        <div className="col-span-4 mt-2 mb-1 text-[10px] uppercase tracking-[0.25em] text-ivory/40 pl-3">
-          Top section · score = (n − 3) × v
+        <div className="col-span-4 mt-2 mb-1 font-display tracking-[0.2em] text-amber-200/90 text-sm pl-3">
+          Szkółka
         </div>
 
         {TOP_CATEGORY_IDS.map((cat) => (

@@ -48,6 +48,8 @@ export interface GameState {
   firstRoll: boolean;
   keptMask: KeptMask;
   rollsThisTurn: number;
+  /** True between scoring and the auto-advance firing — blocks further scoring. */
+  turnScored: boolean;
   players: PlayerScorecard[];
   activePlayerId: string | null;
   viewedPlayerId: string | null;
@@ -89,7 +91,7 @@ export interface GameState {
 }
 
 const STARTING_DICE: DiceRoll = [1, 1, 1, 1, 1];
-const AUTO_SWITCH_DELAY_MS = 2000;
+const AUTO_SWITCH_DELAY_MS = 1200;
 
 const nextFace = (f: DieFace): DieFace => ((f % 6) + 1) as DieFace;
 
@@ -142,6 +144,7 @@ export const useGameStore = create<GameState>()(
             set({
               keptMask: [...NO_KEPT] as KeptMask,
               rollsThisTurn: 0,
+              turnScored: false,
               firstRoll: true,
             });
             emit({ kind: 'setFirstRoll', firstRoll: true });
@@ -159,6 +162,7 @@ export const useGameStore = create<GameState>()(
             viewedPlayerId: next.playerId,
             keptMask: [...NO_KEPT] as KeptMask,
             rollsThisTurn: 0,
+            turnScored: false,
             firstRoll: true,
           });
           emit({ kind: 'setActivePlayer', playerId: next.playerId });
@@ -177,6 +181,7 @@ export const useGameStore = create<GameState>()(
         firstRoll: true,
         keptMask: [...NO_KEPT] as KeptMask,
         rollsThisTurn: 0,
+        turnScored: false,
         players: [firstPlayer],
         activePlayerId: firstPlayer.playerId,
         viewedPlayerId: firstPlayer.playerId,
@@ -195,6 +200,8 @@ export const useGameStore = create<GameState>()(
             viewedPlayerId: active,
             keptMask: [...NO_KEPT] as KeptMask,
             rollsThisTurn: 0,
+            turnScored: false,
+            firstRoll: true,
           });
         },
 
@@ -320,9 +327,11 @@ export const useGameStore = create<GameState>()(
         setViewedPlayer: (playerId) => set({ viewedPlayerId: playerId }),
 
         scoreCell: (column, category) => {
-          const { dice, firstRoll, players, activePlayerId, rollsThisTurn } = get();
-          // No scoring before the player has actually rolled this turn.
-          if (rollsThisTurn === 0) return;
+          const { dice, firstRoll, players, activePlayerId, rollsThisTurn, turnScored } = get();
+          // No scoring before the player has actually rolled this turn,
+          // and only one cell can be scored per turn (rest are locked
+          // until the next player takes over).
+          if (rollsThisTurn === 0 || turnScored) return;
           const playerId = activePlayerId ?? players[0]?.playerId;
           if (!playerId) return;
           const player = players.find((p) => p.playerId === playerId);
@@ -333,6 +342,7 @@ export const useGameStore = create<GameState>()(
             ? buildBottomEntry(category, dice, firstRoll)
             : buildTopEntry(category, dice, firstRoll);
           writeEntry(playerId, column, category, entry);
+          set({ turnScored: true });
           emit({ kind: 'score', playerId, column, category, entry });
           scheduleAutoAdvance();
         },
@@ -345,6 +355,7 @@ export const useGameStore = create<GameState>()(
             firstRoll: true,
             keptMask: [...NO_KEPT] as KeptMask,
             rollsThisTurn: 0,
+            turnScored: false,
             players: [player],
             activePlayerId: player.playerId,
             viewedPlayerId: player.playerId,
@@ -403,6 +414,7 @@ export const useGameStore = create<GameState>()(
                 firstRoll: true,
                 keptMask: [...NO_KEPT] as KeptMask,
                 rollsThisTurn: 0,
+                turnScored: false,
                 players: [player],
                 activePlayerId: player.playerId,
                 viewedPlayerId: player.playerId,

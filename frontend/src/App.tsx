@@ -8,52 +8,54 @@ import { ExportButtons } from './components/ExportButtons';
 import { MenuScreen } from './components/MenuScreen';
 import { ScorecardGrid } from './components/ScorecardGrid';
 import { ScorecardModal } from './components/ScorecardModal';
+import { RulebookModal } from './components/RulebookModal';
 
 export default function App() {
   const screen = useGameStore((s) => s.screen);
   const players = useGameStore((s) => s.players);
   const activePlayerId = useGameStore((s) => s.activePlayerId);
   const playMode = useGameStore((s) => s.playMode);
-  const diceMode = useGameStore((s) => s.diceMode);
   const resetGame = useGameStore((s) => s.resetGame);
   const openMenu = useGameStore((s) => s.openMenu);
 
   const [popupPlayerId, setPopupPlayerId] = useState<string | null>(null);
+  const [rulesOpen, setRulesOpen] = useState(false);
 
   if (screen === 'menu') return <MenuScreen />;
 
   const activePlayer =
     players.find((p) => p.playerId === activePlayerId) ?? players[0] ?? null;
 
-  // Popup is reserved for inspecting players who are NOT the active turn
-  // holder — the active player's card is always rendered inline.
   const popupPlayer =
     popupPlayerId != null && popupPlayerId !== activePlayer?.playerId
       ? players.find((p) => p.playerId === popupPlayerId) ?? null
       : null;
 
   const handleOpenScorecard = (playerId: string) => {
-    if (playerId === activePlayer?.playerId) return; // already inline
+    if (playerId === activePlayer?.playerId) return;
     setPopupPlayerId(playerId);
   };
 
   return (
-    <div className="min-h-screen px-4 sm:px-8 py-8 max-w-7xl mx-auto">
-      <header className="flex flex-col sm:flex-row sm:items-end justify-between gap-3 mb-8">
+    <div className="min-h-screen flex flex-col px-4 sm:px-8 py-8 max-w-7xl mx-auto">
+      <header className="flex flex-col sm:flex-row sm:items-start justify-between gap-3 mb-8">
         <div>
-          <div className="text-[10px] uppercase tracking-[0.4em] text-amber-200/70">
-            Polski wariant · digital scorecard ·{' '}
-            <span className="text-ivory/70">{playMode}</span> ·{' '}
-            <span className="text-ivory/70">
-              {diceMode === 'auto' ? 'virtual dice' : 'real-life dice'}
-            </span>
-          </div>
-          <h1 className="font-display text-4xl sm:text-5xl text-ivory mt-1">
+          <h1 className="font-display text-4xl sm:text-5xl text-ivory leading-none">
             Kościany Poker
           </h1>
+          <div className="text-[10px] uppercase tracking-[0.4em] text-amber-200/70 mt-3">
+            Grucha wariant · digital scorecard
+          </div>
         </div>
-        <div className="flex gap-2">
+        <div className="flex gap-2 flex-wrap">
           <ExportButtons />
+          <button
+            type="button"
+            className="btn btn-ghost text-sm"
+            onClick={() => setRulesOpen(true)}
+          >
+            Rules
+          </button>
           <button type="button" className="btn btn-ghost text-sm" onClick={openMenu}>
             Menu
           </button>
@@ -69,7 +71,7 @@ export default function App() {
         </div>
       </header>
 
-      <div className="grid lg:grid-cols-12 gap-6">
+      <div className="grid lg:grid-cols-12 gap-6 flex-1">
         <section className="lg:col-span-7 flex flex-col gap-6">
           <DiceInput />
           <MultiplierToggle />
@@ -79,18 +81,6 @@ export default function App() {
         <aside className="lg:col-span-5 flex flex-col gap-6">
           <PlayersBar onOpenScorecard={handleOpenScorecard} />
           {playMode === 'network' && <NetworkControls />}
-          <div className="felt-card p-5 text-sm text-ivory/70 leading-relaxed">
-            <h3 className="font-display text-lg text-ivory mb-2">Quick rules</h3>
-            <ul className="list-disc list-inside space-y-1">
-              <li>3 rolls per turn; keep dice between rolls.</li>
-              <li>Top section: <span className="font-mono">(n − 3) × v</span>; never doubled.</li>
-              <li>Top bonus per column: ≥15 → +50, ≥21 → +100.</li>
-              <li>Each top column unlocks its own bottom column (3 entries).</li>
-              <li>n-of-a-kind sums only the matching dice.</li>
-              <li>First Roll ×2 doubles bottom-section scores only; clears on roll 2.</li>
-              <li>Clean column +100 if no crossed-out bottom cells.</li>
-            </ul>
-          </div>
         </aside>
       </div>
 
@@ -101,9 +91,20 @@ export default function App() {
           onClose={() => setPopupPlayerId(null)}
         />
       )}
+      {rulesOpen && <RulebookModal onClose={() => setRulesOpen(false)} />}
 
-      <footer className="mt-10 text-center text-xs text-ivory/40 tracking-[0.2em] uppercase">
-        Client-authoritative · localStorage persisted · WebSocket broker
+      <footer className="mt-12 pt-6 border-t border-ivory/10 flex flex-col sm:flex-row items-center justify-between gap-2 text-xs text-ivory/50">
+        <span>© 2026 Alan Gruszkiewicz</span>
+        <span>
+          <a
+            href="https://github.com/alan-g04/kosciany-poker"
+            target="_blank"
+            rel="noreferrer"
+            className="hover:text-ivory underline-offset-2 hover:underline"
+          >
+            Source on GitHub
+          </a>
+        </span>
       </footer>
     </div>
   );

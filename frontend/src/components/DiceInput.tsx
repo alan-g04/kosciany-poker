@@ -30,7 +30,7 @@ export function DiceInput() {
         </h2>
         <span className="text-xs uppercase tracking-[0.2em] text-ivory/60">
           Roll {Math.min(rollsThisTurn, MAX_ROLLS_PER_TURN)} / {MAX_ROLLS_PER_TURN}
-          {firstRoll && <span className="text-amber-300/90 ml-2">· ×2 armed (bottom only)</span>}
+          {firstRoll && <span className="text-amber-300/90 ml-2">· ×2 ARMED</span>}
         </span>
       </div>
 
