@@ -134,16 +134,17 @@ export const useGameStore = create<GameState>()(
         }));
       };
 
-      const resetTurn = () => {
-        set({ keptMask: [...NO_KEPT] as KeptMask, rollsThisTurn: 0 });
-      };
-
       const scheduleAutoAdvance = () => {
         setTimeout(() => {
           const { players, activePlayerId } = get();
           if (players.length < 2) {
-            // Solo: just reset the turn state so they can roll again.
-            resetTurn();
+            // Solo: reset turn state and re-arm the multiplier for the next roll.
+            set({
+              keptMask: [...NO_KEPT] as KeptMask,
+              rollsThisTurn: 0,
+              firstRoll: true,
+            });
+            emit({ kind: 'setFirstRoll', firstRoll: true });
             return;
           }
           const idx = Math.max(
@@ -158,8 +159,10 @@ export const useGameStore = create<GameState>()(
             viewedPlayerId: next.playerId,
             keptMask: [...NO_KEPT] as KeptMask,
             rollsThisTurn: 0,
+            firstRoll: true,
           });
           emit({ kind: 'setActivePlayer', playerId: next.playerId });
+          emit({ kind: 'setFirstRoll', firstRoll: true });
         }, AUTO_SWITCH_DELAY_MS);
       };
 
@@ -246,13 +249,20 @@ export const useGameStore = create<GameState>()(
           const newDice = isFirst ? randomDice() : rerollNonKept(s.dice, s.keptMask);
           const newRolls = s.rollsThisTurn + 1;
           const newKept = newRolls >= MAX_ROLLS_PER_TURN ? ([...ALL_KEPT] as KeptMask) : s.keptMask;
+          // The x2 first-roll bonus only applies to a score logged after roll 1.
+          // The moment the player rolls again, it clears automatically.
+          const newFirstRoll = newRolls <= 1 ? s.firstRoll : false;
           set({
             dice: newDice,
             rollsThisTurn: newRolls,
             keptMask: newKept,
+            firstRoll: newFirstRoll,
             rollNonce: s.rollNonce + 1,
           });
           emit({ kind: 'setDice', dice: newDice });
+          if (newFirstRoll !== s.firstRoll) {
+            emit({ kind: 'setFirstRoll', firstRoll: newFirstRoll });
+          }
         },
 
         nextManualRoll: () => {
@@ -260,11 +270,16 @@ export const useGameStore = create<GameState>()(
           if (s.rollsThisTurn >= MAX_ROLLS_PER_TURN) return;
           const newRolls = s.rollsThisTurn + 1;
           const newKept = newRolls >= MAX_ROLLS_PER_TURN ? ([...ALL_KEPT] as KeptMask) : s.keptMask;
+          const newFirstRoll = newRolls <= 1 ? s.firstRoll : false;
           set({
             rollsThisTurn: newRolls,
             keptMask: newKept,
+            firstRoll: newFirstRoll,
             rollNonce: s.rollNonce + 1,
           });
+          if (newFirstRoll !== s.firstRoll) {
+            emit({ kind: 'setFirstRoll', firstRoll: newFirstRoll });
+          }
         },
 
         addPlayer: (name) => {
@@ -305,7 +320,9 @@ export const useGameStore = create<GameState>()(
         setViewedPlayer: (playerId) => set({ viewedPlayerId: playerId }),
 
         scoreCell: (column, category) => {
-          const { dice, firstRoll, players, activePlayerId } = get();
+          const { dice, firstRoll, players, activePlayerId, rollsThisTurn } = get();
+          // No scoring before the player has actually rolled this turn.
+          if (rollsThisTurn === 0) return;
           const playerId = activePlayerId ?? players[0]?.playerId;
           if (!playerId) return;
           const player = players.find((p) => p.playerId === playerId);

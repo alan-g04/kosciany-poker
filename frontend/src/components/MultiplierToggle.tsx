@@ -9,33 +9,36 @@ export function MultiplierToggle() {
       <div>
         <div className="font-display text-xl text-ivory">First Roll ×2</div>
         <p className="text-sm text-ivory/60 max-w-xs">
-          When on, the next bottom-section cell you log is doubled. Stays on
-          until you turn it off — top-section scores are never doubled.
+          Doubles the next bottom-section cell you log. Clears the moment
+          you roll a second time. Top-section scores are never doubled.
         </p>
       </div>
-      <button
-        type="button"
-        onClick={() => setFirstRoll(!firstRoll)}
-        className={`relative w-20 h-10 rounded-full transition-colors ${
-          firstRoll ? 'bg-amber-400' : 'bg-felt-900'
-        } border border-ivory/20`}
-        role="switch"
-        aria-checked={firstRoll}
-        aria-label="First roll multiplier"
-      >
+
+      <div className="flex items-center gap-3">
         <span
-          className={`absolute top-1 left-1 w-8 h-8 rounded-full bg-ivory shadow transition-transform ${
-            firstRoll ? 'translate-x-10' : 'translate-x-0'
-          }`}
-        />
-        <span
-          className={`absolute inset-0 flex items-center justify-center font-mono text-xs font-bold ${
-            firstRoll ? 'text-felt-950' : 'text-ivory/40'
+          className={`font-mono text-xs uppercase tracking-[0.2em] ${
+            firstRoll ? 'text-amber-200' : 'text-ivory/40'
           }`}
         >
-          {firstRoll ? '×2' : 'OFF'}
+          {firstRoll ? '×2 armed' : 'Off'}
         </span>
-      </button>
+        <button
+          type="button"
+          onClick={() => setFirstRoll(!firstRoll)}
+          className={`relative w-14 h-7 rounded-full transition-colors ${
+            firstRoll ? 'bg-amber-400' : 'bg-felt-950'
+          } border border-ivory/25`}
+          role="switch"
+          aria-checked={firstRoll}
+          aria-label="First-roll multiplier"
+        >
+          <span
+            className={`absolute top-0.5 left-0.5 w-6 h-6 rounded-full bg-ivory shadow transition-transform ${
+              firstRoll ? 'translate-x-7' : 'translate-x-0'
+            }`}
+          />
+        </button>
+      </div>
     </div>
   );
 }

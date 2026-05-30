@@ -34,12 +34,15 @@ interface CellProps {
 function Cell({ player, column, category, bottomLockedForColumn, readOnly, onScored }: CellProps) {
   const dice = useGameStore((s) => s.dice);
   const firstRoll = useGameStore((s) => s.firstRoll);
+  const rollsThisTurn = useGameStore((s) => s.rollsThisTurn);
   const scoreCell = useGameStore((s) => s.scoreCell);
 
   const entry = player.columns[column][category];
   const isBottom = BOTTOM_CATEGORY_IDS.includes(category as never);
   const locked = isBottom && bottomLockedForColumn;
-  const selectable = !readOnly && !locked && isCellSelectable(player, column, category);
+  const hasRolled = rollsThisTurn > 0;
+  const selectable =
+    !readOnly && !locked && hasRolled && isCellSelectable(player, column, category);
   const preview = selectable ? previewCellScore(dice, category, firstRoll) : null;
 
   let body: React.ReactNode = null;

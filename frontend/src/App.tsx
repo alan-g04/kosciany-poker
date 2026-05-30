@@ -6,6 +6,7 @@ import { PlayersBar } from './components/PlayersBar';
 import { NetworkControls } from './components/NetworkControls';
 import { ExportButtons } from './components/ExportButtons';
 import { MenuScreen } from './components/MenuScreen';
+import { ScorecardGrid } from './components/ScorecardGrid';
 import { ScorecardModal } from './components/ScorecardModal';
 
 export default function App() {
@@ -17,18 +18,24 @@ export default function App() {
   const resetGame = useGameStore((s) => s.resetGame);
   const openMenu = useGameStore((s) => s.openMenu);
 
-  const [openCardPlayerId, setOpenCardPlayerId] = useState<string | null>(null);
+  const [popupPlayerId, setPopupPlayerId] = useState<string | null>(null);
 
   if (screen === 'menu') return <MenuScreen />;
 
   const activePlayer =
     players.find((p) => p.playerId === activePlayerId) ?? players[0] ?? null;
-  const openCardPlayer =
-    openCardPlayerId != null
-      ? players.find((p) => p.playerId === openCardPlayerId) ?? null
+
+  // Popup is reserved for inspecting players who are NOT the active turn
+  // holder — the active player's card is always rendered inline.
+  const popupPlayer =
+    popupPlayerId != null && popupPlayerId !== activePlayer?.playerId
+      ? players.find((p) => p.playerId === popupPlayerId) ?? null
       : null;
-  const openCardIsActive =
-    !!openCardPlayer && !!activePlayer && openCardPlayer.playerId === activePlayer.playerId;
+
+  const handleOpenScorecard = (playerId: string) => {
+    if (playerId === activePlayer?.playerId) return; // already inline
+    setPopupPlayerId(playerId);
+  };
 
   return (
     <div className="min-h-screen px-4 sm:px-8 py-8 max-w-7xl mx-auto">
@@ -47,15 +54,6 @@ export default function App() {
         </div>
         <div className="flex gap-2">
           <ExportButtons />
-          {activePlayer && (
-            <button
-              type="button"
-              className="btn btn-primary text-sm"
-              onClick={() => setOpenCardPlayerId(activePlayer.playerId)}
-            >
-              Open scorecard
-            </button>
-          )}
           <button type="button" className="btn btn-ghost text-sm" onClick={openMenu}>
             Menu
           </button>
@@ -75,10 +73,11 @@ export default function App() {
         <section className="lg:col-span-7 flex flex-col gap-6">
           <DiceInput />
           <MultiplierToggle />
+          {activePlayer && <ScorecardGrid player={activePlayer} />}
         </section>
 
         <aside className="lg:col-span-5 flex flex-col gap-6">
-          <PlayersBar onOpenScorecard={setOpenCardPlayerId} />
+          <PlayersBar onOpenScorecard={handleOpenScorecard} />
           {playMode === 'network' && <NetworkControls />}
           <div className="felt-card p-5 text-sm text-ivory/70 leading-relaxed">
             <h3 className="font-display text-lg text-ivory mb-2">Quick rules</h3>
@@ -88,18 +87,18 @@ export default function App() {
               <li>Top bonus per column: ≥15 → +50, ≥21 → +100.</li>
               <li>Each top column unlocks its own bottom column (3 entries).</li>
               <li>n-of-a-kind sums only the matching dice.</li>
-              <li>First Roll ×2 doubles bottom-section scores only.</li>
+              <li>First Roll ×2 doubles bottom-section scores only; clears on roll 2.</li>
               <li>Clean column +100 if no crossed-out bottom cells.</li>
             </ul>
           </div>
         </aside>
       </div>
 
-      {openCardPlayer && (
+      {popupPlayer && (
         <ScorecardModal
-          player={openCardPlayer}
-          readOnly={!openCardIsActive}
-          onClose={() => setOpenCardPlayerId(null)}
+          player={popupPlayer}
+          readOnly
+          onClose={() => setPopupPlayerId(null)}
         />
       )}
 

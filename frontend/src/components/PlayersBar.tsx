@@ -52,14 +52,16 @@ export function PlayersBar({ onOpenScorecard }: PlayersBarProps) {
                 className="bg-transparent flex-1 font-display text-lg text-ivory outline-none"
               />
 
-              <button
-                type="button"
-                onClick={() => onOpenScorecard(p.playerId)}
-                className="text-[11px] uppercase tracking-[0.18em] px-2 py-1 rounded border border-ivory/20 text-ivory/70 hover:text-ivory hover:border-ivory/50"
-                aria-label={`Open ${p.name}'s scorecard`}
-              >
-                Scorecard
-              </button>
+              {!isActive && (
+                <button
+                  type="button"
+                  onClick={() => onOpenScorecard(p.playerId)}
+                  className="text-[11px] uppercase tracking-[0.18em] px-2 py-1 rounded border border-ivory/20 text-ivory/70 hover:text-ivory hover:border-ivory/50"
+                  aria-label={`Open ${p.name}'s scorecard`}
+                >
+                  Scorecard
+                </button>
+              )}
 
               <button
                 type="button"
