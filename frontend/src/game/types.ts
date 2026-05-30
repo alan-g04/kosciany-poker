@@ -7,13 +7,17 @@ export type ColumnIndex = 0 | 1 | 2;
 export type TopCategoryId = 'ones' | 'twos' | 'threes' | 'fours' | 'fives' | 'sixes';
 
 export type BottomCategoryId =
+  | 'pair'
+  | 'twoPair'
   | 'threeOfAKind'
-  | 'fourOfAKind'
-  | 'fullHouse'
   | 'smallStraight'
   | 'largeStraight'
+  | 'fullHouse'
+  | 'fourOfAKind'
   | 'poker'
-  | 'chance';
+  | 'chance'
+  | 'odds'
+  | 'evens';
 
 export type CategoryId = TopCategoryId | BottomCategoryId;
 
@@ -22,7 +26,17 @@ export const TOP_CATEGORY_IDS: readonly TopCategoryId[] = [
 ] as const;
 
 export const BOTTOM_CATEGORY_IDS: readonly BottomCategoryId[] = [
-  'threeOfAKind', 'fourOfAKind', 'fullHouse', 'smallStraight', 'largeStraight', 'poker', 'chance',
+  'pair',
+  'twoPair',
+  'threeOfAKind',
+  'smallStraight',
+  'largeStraight',
+  'fullHouse',
+  'fourOfAKind',
+  'poker',
+  'chance',
+  'odds',
+  'evens',
 ] as const;
 
 export const CATEGORY_FACE: Record<TopCategoryId, DieFace> = {
@@ -41,13 +55,17 @@ export const CATEGORY_LABEL: Record<CategoryId, string> = {
   fours: '4s',
   fives: '5s',
   sixes: '6s',
+  pair: 'Pair',
+  twoPair: '2-Pair',
   threeOfAKind: '3 of a Kind',
-  fourOfAKind: '4 of a Kind',
-  fullHouse: 'Full House',
   smallStraight: 'Small Straight',
   largeStraight: 'Large Straight',
+  fullHouse: 'Full House',
+  fourOfAKind: '4 of a Kind',
   poker: 'Poker (5 of a Kind)',
   chance: 'Chance',
+  odds: 'Odds',
+  evens: 'Evens',
 };
 
 export interface ScoreEntry {

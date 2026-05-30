@@ -117,14 +117,29 @@ export function RulebookModal({ onClose }: RulebookModalProps) {
             opens once <strong>3 entries</strong> are logged in column N's top
             (filling other columns' tops doesn't help).
           </p>
+          <p className="text-ivory/60">
+            Rows are listed in the order they appear on the scorecard.
+          </p>
           <ul className="list-disc list-inside space-y-1">
+            <li>
+              <strong>Pair</strong> · requires ≥2 matching dice. Score =
+              highest pair × 2.
+            </li>
+            <li>
+              <strong>2-Pair</strong> · requires two distinct pairs (a full
+              house counts as well). Score = sum of all four paired dice.
+            </li>
             <li>
               <strong>3 of a Kind</strong> · requires ≥3 matching dice. Score =
               face × 3 (only the matching dice count).
             </li>
             <li>
-              <strong>4 of a Kind</strong> · requires ≥4 matching dice. Score =
-              face × 4.
+              <strong>Small Straight</strong> · exactly 1-2-3-4-5. Fixed{' '}
+              <strong>15</strong>.
+            </li>
+            <li>
+              <strong>Large Straight</strong> · exactly 2-3-4-5-6. Fixed{' '}
+              <strong>20</strong>.
             </li>
             <li>
               <strong>Full House</strong> · strictly 3+2 of two different
@@ -132,12 +147,8 @@ export function RulebookModal({ onClose }: RulebookModalProps) {
               <strong>25</strong>.
             </li>
             <li>
-              <strong>Small Straight</strong> · four consecutive faces. Fixed{' '}
-              <strong>30</strong>.
-            </li>
-            <li>
-              <strong>Large Straight</strong> · five consecutive faces. Fixed{' '}
-              <strong>40</strong>.
+              <strong>4 of a Kind</strong> · requires ≥4 matching dice. Score =
+              face × 4.
             </li>
             <li>
               <strong>Poker</strong> (five of a kind) · all five dice match.
@@ -146,10 +157,20 @@ export function RulebookModal({ onClose }: RulebookModalProps) {
             <li>
               <strong>Chance</strong> · always scores; sum of all five dice.
             </li>
+            <li>
+              <strong>Odds</strong> · always scores; sum of every die showing
+              1, 3, or 5.
+            </li>
+            <li>
+              <strong>Evens</strong> · always scores; sum of every die showing
+              2, 4, or 6.
+            </li>
           </ul>
           <p>
-            If you log a bottom row whose criteria the dice don't meet, the
-            cell is <strong>crossed out</strong> and scores 0.
+            If you log a row whose criteria the dice don't meet (Pair, 2-Pair,
+            3/4-of-a-kind, Poker, the straights, or Full House), the cell is{' '}
+            <strong>crossed out</strong> and scores 0. Chance, Odds, and Evens
+            never cross out.
           </p>
         </Section>
 

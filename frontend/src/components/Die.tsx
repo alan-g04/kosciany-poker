@@ -37,9 +37,18 @@ export function Die({ face, size = 72, onClick, active = false, rollKey }: DiePr
     if (!rolling) setDisplayFace(face);
   }, [face, rolling]);
 
-  // When rollKey ticks, run the spin.
+  // When rollKey ticks to a *new* value, run the spin.
   useEffect(() => {
-    if (rollKey === undefined) return;
+    if (rollKey === undefined) {
+      // No rollKey at all (e.g. manual dice mode) — reset tracking, no animation.
+      prevKey.current = undefined;
+      return;
+    }
+    if (prevKey.current === undefined) {
+      // First numeric rollKey we see — initial sync, don't animate.
+      prevKey.current = rollKey;
+      return;
+    }
     if (prevKey.current === rollKey) return;
     prevKey.current = rollKey;
 

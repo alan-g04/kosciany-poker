@@ -66,15 +66,45 @@ describe('bottom-section evaluators', () => {
     expect(evaluateBottomRaw('fullHouse', d(3, 3, 3, 3, 3))).toEqual({ value: 0, crossedOut: true });
   });
 
-  it('small straight = 30', () => {
-    expect(evaluateBottomRaw('smallStraight', d(1, 2, 3, 4, 6))).toEqual({ value: 30, crossedOut: false });
-    expect(evaluateBottomRaw('smallStraight', d(2, 3, 4, 5, 5))).toEqual({ value: 30, crossedOut: false });
+  it('small straight is strictly 1-2-3-4-5 = 15', () => {
+    expect(evaluateBottomRaw('smallStraight', d(1, 2, 3, 4, 5))).toEqual({ value: 15, crossedOut: false });
+    expect(evaluateBottomRaw('smallStraight', d(2, 3, 4, 5, 6))).toEqual({ value: 0, crossedOut: true });
+    expect(evaluateBottomRaw('smallStraight', d(1, 2, 3, 4, 6))).toEqual({ value: 0, crossedOut: true });
   });
 
-  it('large straight = 40', () => {
-    expect(evaluateBottomRaw('largeStraight', d(1, 2, 3, 4, 5))).toEqual({ value: 40, crossedOut: false });
-    expect(evaluateBottomRaw('largeStraight', d(2, 3, 4, 5, 6))).toEqual({ value: 40, crossedOut: false });
-    expect(evaluateBottomRaw('largeStraight', d(1, 2, 3, 4, 6))).toEqual({ value: 0, crossedOut: true });
+  it('large straight is strictly 2-3-4-5-6 = 20', () => {
+    expect(evaluateBottomRaw('largeStraight', d(2, 3, 4, 5, 6))).toEqual({ value: 20, crossedOut: false });
+    expect(evaluateBottomRaw('largeStraight', d(1, 2, 3, 4, 5))).toEqual({ value: 0, crossedOut: true });
+    expect(evaluateBottomRaw('largeStraight', d(2, 3, 4, 5, 5))).toEqual({ value: 0, crossedOut: true });
+  });
+
+  it('pair scores highest pair × 2', () => {
+    expect(evaluateBottomRaw('pair', d(3, 3, 4, 5, 6))).toEqual({ value: 6, crossedOut: false });
+    expect(evaluateBottomRaw('pair', d(3, 3, 5, 5, 6))).toEqual({ value: 10, crossedOut: false });
+    expect(evaluateBottomRaw('pair', d(1, 2, 3, 4, 5))).toEqual({ value: 0, crossedOut: true });
+    // 4-of-a-kind still scores as a pair (best pair available).
+    expect(evaluateBottomRaw('pair', d(4, 4, 4, 4, 1))).toEqual({ value: 8, crossedOut: false });
+  });
+
+  it('two-pair sums both pairs', () => {
+    expect(evaluateBottomRaw('twoPair', d(3, 3, 5, 5, 6))).toEqual({ value: 16, crossedOut: false });
+    expect(evaluateBottomRaw('twoPair', d(2, 2, 6, 6, 1))).toEqual({ value: 16, crossedOut: false });
+    // Single pair → crossed out.
+    expect(evaluateBottomRaw('twoPair', d(3, 3, 4, 5, 6))).toEqual({ value: 0, crossedOut: true });
+    // Full house counts as two-pair (3+2).
+    expect(evaluateBottomRaw('twoPair', d(3, 3, 3, 5, 5))).toEqual({ value: 16, crossedOut: false });
+    // 5 of a kind has only one face → no two-pair.
+    expect(evaluateBottomRaw('twoPair', d(3, 3, 3, 3, 3))).toEqual({ value: 0, crossedOut: true });
+  });
+
+  it('odds sums dice showing 1/3/5', () => {
+    expect(evaluateBottomRaw('odds', d(1, 2, 3, 4, 5))).toEqual({ value: 9, crossedOut: false });
+    expect(evaluateBottomRaw('odds', d(2, 4, 6, 2, 4))).toEqual({ value: 0, crossedOut: false });
+  });
+
+  it('evens sums dice showing 2/4/6', () => {
+    expect(evaluateBottomRaw('evens', d(1, 2, 3, 4, 5))).toEqual({ value: 6, crossedOut: false });
+    expect(evaluateBottomRaw('evens', d(2, 4, 6, 6, 6))).toEqual({ value: 24, crossedOut: false });
   });
 
   it('poker (5 of a kind) = 50', () => {
@@ -138,47 +168,41 @@ describe('top-section bonus tiering', () => {
 });
 
 describe('column totals', () => {
+  const fullColumn = () => ({
+    ones: { value: 2, crossedOut: false, firstRoll: false },
+    twos: { value: 4, crossedOut: false, firstRoll: false },
+    threes: { value: 6, crossedOut: false, firstRoll: false },
+    fours: { value: 8, crossedOut: false, firstRoll: false },
+    fives: { value: 10, crossedOut: false, firstRoll: false },
+    sixes: { value: 12, crossedOut: false, firstRoll: false },
+    pair: { value: 12, crossedOut: false, firstRoll: false },
+    twoPair: { value: 22, crossedOut: false, firstRoll: false },
+    threeOfAKind: { value: 17, crossedOut: false, firstRoll: false },
+    smallStraight: { value: 15, crossedOut: false, firstRoll: false },
+    largeStraight: { value: 20, crossedOut: false, firstRoll: false },
+    fullHouse: { value: 25, crossedOut: false, firstRoll: false },
+    fourOfAKind: { value: 18, crossedOut: false, firstRoll: false },
+    poker: { value: 50, crossedOut: false, firstRoll: false },
+    chance: { value: 25, crossedOut: false, firstRoll: false },
+    odds: { value: 9, crossedOut: false, firstRoll: false },
+    evens: { value: 12, crossedOut: false, firstRoll: false },
+  });
+
   it('applies top bonus and clean-sweep bonus on a complete column', () => {
-    const column = {
-      ones: { value: 2, crossedOut: false, firstRoll: false },
-      twos: { value: 4, crossedOut: false, firstRoll: false },
-      threes: { value: 6, crossedOut: false, firstRoll: false },
-      fours: { value: 8, crossedOut: false, firstRoll: false },
-      fives: { value: 10, crossedOut: false, firstRoll: false },
-      sixes: { value: 12, crossedOut: false, firstRoll: false },
-      threeOfAKind: { value: 17, crossedOut: false, firstRoll: false },
-      fourOfAKind: { value: 18, crossedOut: false, firstRoll: false },
-      fullHouse: { value: 25, crossedOut: false, firstRoll: false },
-      smallStraight: { value: 30, crossedOut: false, firstRoll: false },
-      largeStraight: { value: 40, crossedOut: false, firstRoll: false },
-      poker: { value: 50, crossedOut: false, firstRoll: false },
-      chance: { value: 25, crossedOut: false, firstRoll: false },
-    };
+    const column = fullColumn();
     const totals = calculateColumnTotals(column);
     expect(totals.topRaw).toBe(42);
     expect(totals.topBonus).toBe(TOP_BONUS_BIG_REWARD);
-    expect(totals.bottomRaw).toBe(205);
+    // 12+22+17+15+20+25+18+50+25+9+12 = 225
+    expect(totals.bottomRaw).toBe(225);
     expect(totals.columnBonus).toBe(COLUMN_CLEAN_SWEEP_BONUS);
     expect(totals.complete).toBe(true);
-    expect(totals.total).toBe(42 + TOP_BONUS_BIG_REWARD + 205 + COLUMN_CLEAN_SWEEP_BONUS);
+    expect(totals.total).toBe(42 + TOP_BONUS_BIG_REWARD + 225 + COLUMN_CLEAN_SWEEP_BONUS);
   });
 
   it('withholds clean-sweep bonus when ANY bottom cell is crossed out', () => {
-    const column = {
-      ones: { value: 2, crossedOut: false, firstRoll: false },
-      twos: { value: 4, crossedOut: false, firstRoll: false },
-      threes: { value: 6, crossedOut: false, firstRoll: false },
-      fours: { value: 8, crossedOut: false, firstRoll: false },
-      fives: { value: 10, crossedOut: false, firstRoll: false },
-      sixes: { value: 12, crossedOut: false, firstRoll: false },
-      threeOfAKind: { value: 17, crossedOut: false, firstRoll: false },
-      fourOfAKind: { value: 18, crossedOut: false, firstRoll: false },
-      fullHouse: { value: 25, crossedOut: false, firstRoll: false },
-      smallStraight: { value: 30, crossedOut: false, firstRoll: false },
-      largeStraight: { value: 40, crossedOut: false, firstRoll: false },
-      poker: { value: 0, crossedOut: true, firstRoll: false },
-      chance: { value: 25, crossedOut: false, firstRoll: false },
-    };
+    const column = fullColumn();
+    column.poker = { value: 0, crossedOut: true, firstRoll: false };
     const totals = calculateColumnTotals(column);
     expect(totals.complete).toBe(true);
     expect(totals.columnBonus).toBe(0);
@@ -252,9 +276,9 @@ describe('preview scoring', () => {
   });
 
   it('bottom preview marks crossedOut correctly', () => {
-    const dice = d(1, 2, 3, 4, 5);
-    expect(previewCellScore(dice, 'poker', false)).toEqual({ value: 0, crossedOut: true });
-    expect(previewCellScore(dice, 'largeStraight', false)).toEqual({ value: 40, crossedOut: false });
+    expect(previewCellScore(d(1, 2, 3, 4, 5), 'poker', false)).toEqual({ value: 0, crossedOut: true });
+    expect(previewCellScore(d(1, 2, 3, 4, 5), 'smallStraight', false)).toEqual({ value: 15, crossedOut: false });
+    expect(previewCellScore(d(2, 3, 4, 5, 6), 'largeStraight', false)).toEqual({ value: 20, crossedOut: false });
   });
 });
 
@@ -262,7 +286,19 @@ describe('category id arrays', () => {
   it('top has 6 ids', () => {
     expect(TOP_CATEGORY_IDS).toHaveLength(6);
   });
-  it('bottom has 7 ids', () => {
-    expect(BOTTOM_CATEGORY_IDS).toHaveLength(7);
+  it('bottom has 11 ids in the expected order', () => {
+    expect(BOTTOM_CATEGORY_IDS).toEqual([
+      'pair',
+      'twoPair',
+      'threeOfAKind',
+      'smallStraight',
+      'largeStraight',
+      'fullHouse',
+      'fourOfAKind',
+      'poker',
+      'chance',
+      'odds',
+      'evens',
+    ]);
   });
 });

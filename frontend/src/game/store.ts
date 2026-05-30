@@ -22,10 +22,12 @@ export type DiceMode = 'manual' | 'auto';
 export type Screen = 'menu' | 'playing';
 
 export type KeptMask = [boolean, boolean, boolean, boolean, boolean];
+export type DieNonces = [number, number, number, number, number];
 
 export const MAX_ROLLS_PER_TURN = 3;
 const NO_KEPT: KeptMask = [false, false, false, false, false];
 const ALL_KEPT: KeptMask = [true, true, true, true, true];
+const ZERO_NONCES: DieNonces = [0, 0, 0, 0, 0];
 
 export type ActionEvent =
   | { kind: 'score'; playerId: string; column: ColumnIndex; category: CategoryId; entry: ScoreEntry }
@@ -53,7 +55,8 @@ export interface GameState {
   players: PlayerScorecard[];
   activePlayerId: string | null;
   viewedPlayerId: string | null;
-  rollNonce: number;
+  /** Per-die animation trigger — increments only when that die's face is re-rolled. */
+  dieNonces: DieNonces;
 
   // network
   remoteEmitter: ((action: ActionEvent) => void) | null;
@@ -185,7 +188,7 @@ export const useGameStore = create<GameState>()(
         players: [firstPlayer],
         activePlayerId: firstPlayer.playerId,
         viewedPlayerId: firstPlayer.playerId,
-        rollNonce: 0,
+        dieNonces: [...ZERO_NONCES] as DieNonces,
 
         remoteEmitter: null,
 
@@ -259,12 +262,18 @@ export const useGameStore = create<GameState>()(
           // The x2 first-roll bonus only applies to a score logged after roll 1.
           // The moment the player rolls again, it clears automatically.
           const newFirstRoll = newRolls <= 1 ? s.firstRoll : false;
+          // Only bump the nonce on dice that actually re-rolled this throw.
+          // Using the PRE-roll keptMask so the 3rd roll (which post-locks all
+          // dice) still animates the dice that were just thrown.
+          const newDieNonces = s.dieNonces.map((n, i) =>
+            isFirst || !s.keptMask[i] ? n + 1 : n,
+          ) as DieNonces;
           set({
             dice: newDice,
             rollsThisTurn: newRolls,
             keptMask: newKept,
             firstRoll: newFirstRoll,
-            rollNonce: s.rollNonce + 1,
+            dieNonces: newDieNonces,
           });
           emit({ kind: 'setDice', dice: newDice });
           if (newFirstRoll !== s.firstRoll) {
@@ -282,7 +291,6 @@ export const useGameStore = create<GameState>()(
             rollsThisTurn: newRolls,
             keptMask: newKept,
             firstRoll: newFirstRoll,
-            rollNonce: s.rollNonce + 1,
           });
           if (newFirstRoll !== s.firstRoll) {
             emit({ kind: 'setFirstRoll', firstRoll: newFirstRoll });
@@ -359,7 +367,7 @@ export const useGameStore = create<GameState>()(
             players: [player],
             activePlayerId: player.playerId,
             viewedPlayerId: player.playerId,
-            rollNonce: 0,
+            dieNonces: [...ZERO_NONCES] as DieNonces,
           });
           emit({ kind: 'reset' });
         },
@@ -393,7 +401,12 @@ export const useGameStore = create<GameState>()(
               break;
             }
             case 'setDice':
-              set((s) => ({ dice: action.dice, rollNonce: s.rollNonce + 1 }));
+              set((s) => ({
+                dice: action.dice,
+                dieNonces: s.dieNonces.map((n, i) =>
+                  s.dice[i] !== action.dice[i] ? n + 1 : n,
+                ) as DieNonces,
+              }));
               break;
             case 'setFirstRoll':
               set({ firstRoll: action.firstRoll });
@@ -426,7 +439,7 @@ export const useGameStore = create<GameState>()(
       };
     },
     {
-      name: 'kosciany-poker:v3',
+      name: 'kosciany-poker:v4',
       storage: createJSONStorage(() => localStorage),
       partialize: (s) => ({
         screen: s.screen,

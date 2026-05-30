@@ -100,19 +100,54 @@ function sumOfKind(counts: Record<DieFace, number>, n: number): number {
   return face * n;
 }
 
-function isStraight(counts: Record<DieFace, number>, length: 4 | 5): boolean {
-  const present = ([1, 2, 3, 4, 5, 6] as DieFace[]).map((f) => counts[f] >= 1);
-  let run = 0;
-  for (const p of present) {
-    run = p ? run + 1 : 0;
-    if (run >= length) return true;
+/**
+ * Returns the two distinct faces that form the highest 2-pair (best face first)
+ * — or null when fewer than two distinct pairs exist.
+ */
+function findTwoPair(counts: Record<DieFace, number>): [DieFace, DieFace] | null {
+  const paired: DieFace[] = [];
+  for (const f of [6, 5, 4, 3, 2, 1] as DieFace[]) {
+    if (counts[f] >= 2) paired.push(f);
   }
-  return false;
+  if (paired.length < 2) return null;
+  return [paired[0], paired[1]];
+}
+
+function isExactStraight(counts: Record<DieFace, number>, faces: DieFace[]): boolean {
+  return faces.every((f) => counts[f] >= 1);
+}
+
+function sumOdd(dice: DiceRoll): number {
+  return dice.reduce<number>((acc, d) => (d % 2 === 1 ? acc + d : acc), 0);
+}
+
+function sumEven(dice: DiceRoll): number {
+  return dice.reduce<number>((acc, d) => (d % 2 === 0 ? acc + d : acc), 0);
 }
 
 export function evaluateBottomRaw(category: BottomCategoryId, dice: DiceRoll): BottomEval {
   const counts = countFaces(dice);
   switch (category) {
+    case 'pair': {
+      // Highest pair scores face × 2. Below maxCount 2 means no pair at all.
+      if (maxCount(counts) < 2) return bottomZero();
+      // dominantFace ties on highest face, which is what we want for "best pair".
+      // But if the dominant face has 5/4/3 of a kind, we still take just two of them.
+      let bestPairFace: DieFace = 1;
+      for (const f of [6, 5, 4, 3, 2, 1] as DieFace[]) {
+        if (counts[f] >= 2) {
+          bestPairFace = f;
+          break;
+        }
+      }
+      return { value: bestPairFace * 2, crossedOut: false };
+    }
+    case 'twoPair': {
+      const pair = findTwoPair(counts);
+      return pair
+        ? { value: (pair[0] + pair[1]) * 2, crossedOut: false }
+        : bottomZero();
+    }
     case 'threeOfAKind':
       return maxCount(counts) >= 3
         ? { value: sumOfKind(counts, 3), crossedOut: false }
@@ -131,13 +166,23 @@ export function evaluateBottomRaw(category: BottomCategoryId, dice: DiceRoll): B
         : bottomZero();
     }
     case 'smallStraight':
-      return isStraight(counts, 4) ? { value: 30, crossedOut: false } : bottomZero();
+      // Specifically 1-2-3-4-5.
+      return isExactStraight(counts, [1, 2, 3, 4, 5])
+        ? { value: 15, crossedOut: false }
+        : bottomZero();
     case 'largeStraight':
-      return isStraight(counts, 5) ? { value: 40, crossedOut: false } : bottomZero();
+      // Specifically 2-3-4-5-6.
+      return isExactStraight(counts, [2, 3, 4, 5, 6])
+        ? { value: 20, crossedOut: false }
+        : bottomZero();
     case 'poker':
       return maxCount(counts) >= 5 ? { value: 50, crossedOut: false } : bottomZero();
     case 'chance':
       return { value: sumDice(dice), crossedOut: false };
+    case 'odds':
+      return { value: sumOdd(dice), crossedOut: false };
+    case 'evens':
+      return { value: sumEven(dice), crossedOut: false };
   }
 }
 

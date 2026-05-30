@@ -10,7 +10,7 @@ export function DiceInput() {
   const setDie = useGameStore((s) => s.setDie);
   const firstRoll = useGameStore((s) => s.firstRoll);
   const diceMode = useGameStore((s) => s.diceMode);
-  const rollNonce = useGameStore((s) => s.rollNonce);
+  const dieNonces = useGameStore((s) => s.dieNonces);
   const keptMask = useGameStore((s) => s.keptMask);
   const rollsThisTurn = useGameStore((s) => s.rollsThisTurn);
   const rollVirtualDice = useGameStore((s) => s.rollVirtualDice);
@@ -51,7 +51,7 @@ export function DiceInput() {
                       : () => cycleDie(idx)
                   }
                   active={firstRoll}
-                  rollKey={isAuto && !kept ? rollNonce : undefined}
+                  rollKey={isAuto ? dieNonces[idx] : undefined}
                 />
                 {kept && (
                   <span className="absolute -top-2 -right-2 text-[9px] font-mono bg-emerald-500 text-felt-950 rounded px-1 py-0.5 uppercase tracking-wider">
