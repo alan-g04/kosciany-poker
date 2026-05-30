@@ -36,12 +36,15 @@ function Cell({ player, column, category, bottomLockedForColumn, readOnly, onSco
   const firstRoll = useGameStore((s) => s.firstRoll);
   const rollsThisTurn = useGameStore((s) => s.rollsThisTurn);
   const turnScored = useGameStore((s) => s.turnScored);
+  const diceMode = useGameStore((s) => s.diceMode);
   const scoreCell = useGameStore((s) => s.scoreCell);
 
   const entry = player.columns[column][category];
   const isBottom = BOTTOM_CATEGORY_IDS.includes(category as never);
   const locked = isBottom && bottomLockedForColumn;
-  const hasRolled = rollsThisTurn > 0;
+  // Virtual dice mode requires at least one roll first; manual mode trusts
+  // that the user has rolled their physical dice already.
+  const hasRolled = diceMode === 'manual' || rollsThisTurn > 0;
   const selectable =
     !readOnly && !locked && hasRolled && !turnScored && isCellSelectable(player, column, category);
   const preview = selectable ? previewCellScore(dice, category, firstRoll) : null;

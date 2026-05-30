@@ -68,11 +68,19 @@ export function RulebookModal({ onClose }: RulebookModalProps) {
         <Section title="The turn">
           <p>You may roll up to <strong>three times</strong> per turn.</p>
           <ul className="list-disc list-inside space-y-1">
-            <li>Roll 1: all five dice are rolled.</li>
-            <li>Between rolls, tap any die (or its <em>Keep</em> button) to lock it.</li>
-            <li>Re-rolls only re-randomise dice you have not kept.</li>
-            <li>After roll 3, every die is locked automatically.</li>
-            <li>You must roll at least once before any cell becomes scorable.</li>
+            <li>
+              <strong>Virtual dice</strong>: tap <em>Roll</em>. Between rolls,
+              tap any die (or its <em>Keep</em> button) to lock it; re-rolls
+              only re-randomise dice you haven't kept. After roll 3, every die
+              is locked automatically. You must roll at least once before a
+              cell becomes scorable.
+            </li>
+            <li>
+              <strong>Real-life dice</strong>: roll your own dice as many
+              times as the rules allow, then enter your final dice on screen.
+              All scorecard cells are open at any time — flip the ×2 marker on
+              if you're scoring after your first roll.
+            </li>
             <li>Each turn ends as soon as you log one score.</li>
           </ul>
           <p>
@@ -155,22 +163,25 @@ export function RulebookModal({ onClose }: RulebookModalProps) {
               Fixed <strong>50</strong>.
             </li>
             <li>
+              <strong>Odds</strong> · requires <em>every</em> die to show an
+              odd face (1/3/5). Score = sum of all five dice.
+            </li>
+            <li>
+              <strong>Evens</strong> · requires <em>every</em> die to show an
+              even face (2/4/6). Score = sum of all five dice.
+            </li>
+            <li>
               <strong>Chance</strong> · always scores; sum of all five dice.
-            </li>
-            <li>
-              <strong>Odds</strong> · always scores; sum of every die showing
-              1, 3, or 5.
-            </li>
-            <li>
-              <strong>Evens</strong> · always scores; sum of every die showing
-              2, 4, or 6.
+              Use it as a safety row — a poker rolled when both poker cells
+              are taken or crossed out can still be logged here. Chance is{' '}
+              <em>never</em> doubled by the ×2 marker.
             </li>
           </ul>
           <p>
             If you log a row whose criteria the dice don't meet (Pair, 2-Pair,
-            3/4-of-a-kind, Poker, the straights, or Full House), the cell is{' '}
-            <strong>crossed out</strong> and scores 0. Chance, Odds, and Evens
-            never cross out.
+            3/4-of-a-kind, Poker, the straights, Full House, Odds, or Evens),
+            the cell is <strong>crossed out</strong> and scores 0. Chance never
+            crosses out.
           </p>
         </Section>
 

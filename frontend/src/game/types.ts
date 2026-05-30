@@ -15,9 +15,9 @@ export type BottomCategoryId =
   | 'fullHouse'
   | 'fourOfAKind'
   | 'poker'
-  | 'chance'
   | 'odds'
-  | 'evens';
+  | 'evens'
+  | 'chance';
 
 export type CategoryId = TopCategoryId | BottomCategoryId;
 
@@ -34,9 +34,9 @@ export const BOTTOM_CATEGORY_IDS: readonly BottomCategoryId[] = [
   'fullHouse',
   'fourOfAKind',
   'poker',
-  'chance',
   'odds',
   'evens',
+  'chance',
 ] as const;
 
 export const CATEGORY_FACE: Record<TopCategoryId, DieFace> = {

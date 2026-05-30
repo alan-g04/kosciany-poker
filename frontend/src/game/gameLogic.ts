@@ -117,12 +117,12 @@ function isExactStraight(counts: Record<DieFace, number>, faces: DieFace[]): boo
   return faces.every((f) => counts[f] >= 1);
 }
 
-function sumOdd(dice: DiceRoll): number {
-  return dice.reduce<number>((acc, d) => (d % 2 === 1 ? acc + d : acc), 0);
+function allOdd(dice: DiceRoll): boolean {
+  return dice.every((d) => d % 2 === 1);
 }
 
-function sumEven(dice: DiceRoll): number {
-  return dice.reduce<number>((acc, d) => (d % 2 === 0 ? acc + d : acc), 0);
+function allEven(dice: DiceRoll): boolean {
+  return dice.every((d) => d % 2 === 0);
 }
 
 export function evaluateBottomRaw(category: BottomCategoryId, dice: DiceRoll): BottomEval {
@@ -180,9 +180,13 @@ export function evaluateBottomRaw(category: BottomCategoryId, dice: DiceRoll): B
     case 'chance':
       return { value: sumDice(dice), crossedOut: false };
     case 'odds':
-      return { value: sumOdd(dice), crossedOut: false };
+      return allOdd(dice)
+        ? { value: sumDice(dice), crossedOut: false }
+        : bottomZero();
     case 'evens':
-      return { value: sumEven(dice), crossedOut: false };
+      return allEven(dice)
+        ? { value: sumDice(dice), crossedOut: false }
+        : bottomZero();
   }
 }
 
@@ -209,18 +213,26 @@ export function buildTopEntry(
   };
 }
 
+/** Bottom rows that never benefit from the first-roll ×2 multiplier. */
+const NEVER_DOUBLED: ReadonlySet<BottomCategoryId> = new Set(['chance']);
+
 export function buildBottomEntry(
   category: BottomCategoryId,
   dice: DiceRoll,
   firstRoll: boolean,
 ): ScoreEntry {
   const raw = evaluateBottomRaw(category, dice);
-  // Crossed-out cells score 0 and are not multiplied by the first-roll bonus.
-  const value = raw.crossedOut ? 0 : applyFirstRoll(raw.value, firstRoll);
+  // Crossed-out cells score 0; chance and a few "safety" rows ignore the bonus.
+  const doublingAllowed = !raw.crossedOut && !NEVER_DOUBLED.has(category);
+  const value = raw.crossedOut
+    ? 0
+    : doublingAllowed
+      ? applyFirstRoll(raw.value, firstRoll)
+      : raw.value;
   return {
     value,
     crossedOut: raw.crossedOut,
-    firstRoll: raw.crossedOut ? false : firstRoll,
+    firstRoll: doublingAllowed && firstRoll,
   };
 }
 

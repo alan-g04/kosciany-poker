@@ -97,14 +97,19 @@ describe('bottom-section evaluators', () => {
     expect(evaluateBottomRaw('twoPair', d(3, 3, 3, 3, 3))).toEqual({ value: 0, crossedOut: true });
   });
 
-  it('odds sums dice showing 1/3/5', () => {
-    expect(evaluateBottomRaw('odds', d(1, 2, 3, 4, 5))).toEqual({ value: 9, crossedOut: false });
-    expect(evaluateBottomRaw('odds', d(2, 4, 6, 2, 4))).toEqual({ value: 0, crossedOut: false });
+  it('odds requires every die to be odd; sums all five', () => {
+    expect(evaluateBottomRaw('odds', d(1, 3, 5, 1, 3))).toEqual({ value: 13, crossedOut: false });
+    expect(evaluateBottomRaw('odds', d(5, 5, 5, 5, 5))).toEqual({ value: 25, crossedOut: false });
+    // Any even die crosses out.
+    expect(evaluateBottomRaw('odds', d(1, 2, 3, 4, 5))).toEqual({ value: 0, crossedOut: true });
+    expect(evaluateBottomRaw('odds', d(2, 4, 6, 2, 4))).toEqual({ value: 0, crossedOut: true });
   });
 
-  it('evens sums dice showing 2/4/6', () => {
-    expect(evaluateBottomRaw('evens', d(1, 2, 3, 4, 5))).toEqual({ value: 6, crossedOut: false });
-    expect(evaluateBottomRaw('evens', d(2, 4, 6, 6, 6))).toEqual({ value: 24, crossedOut: false });
+  it('evens requires every die to be even; sums all five', () => {
+    expect(evaluateBottomRaw('evens', d(2, 4, 6, 2, 4))).toEqual({ value: 18, crossedOut: false });
+    expect(evaluateBottomRaw('evens', d(6, 6, 6, 6, 6))).toEqual({ value: 30, crossedOut: false });
+    expect(evaluateBottomRaw('evens', d(1, 2, 3, 4, 5))).toEqual({ value: 0, crossedOut: true });
+    expect(evaluateBottomRaw('evens', d(1, 3, 5, 1, 3))).toEqual({ value: 0, crossedOut: true });
   });
 
   it('poker (5 of a kind) = 50', () => {
@@ -132,9 +137,15 @@ describe('first-roll multiplier', () => {
   });
 
   it('doubles a bottom-section entry that scored', () => {
-    const entry = buildBottomEntry('chance', d(1, 2, 3, 4, 5), true);
-    expect(entry.value).toBe(30);
+    const entry = buildBottomEntry('threeOfAKind', d(3, 3, 3, 4, 5), true);
+    expect(entry.value).toBe(18); // (3*3) doubled
     expect(entry.firstRoll).toBe(true);
+  });
+
+  it('does NOT multiply Chance even when firstRoll is true', () => {
+    const entry = buildBottomEntry('chance', d(6, 6, 6, 6, 6), true);
+    expect(entry.value).toBe(30);
+    expect(entry.firstRoll).toBe(false);
   });
 
   it('does NOT multiply a crossed-out bottom entry', () => {
@@ -269,10 +280,13 @@ describe('preview scoring', () => {
     expect(previewCellScore(dice, 'fives', true)).toEqual({ value: 5, crossedOut: false });
   });
 
-  it('bottom preview applies firstRoll multiplier', () => {
+  it('bottom preview applies firstRoll multiplier but not on chance', () => {
+    expect(previewCellScore(d(1, 1, 2, 2, 3), 'twoPair', false)).toEqual({ value: 6, crossedOut: false });
+    expect(previewCellScore(d(1, 1, 2, 2, 3), 'twoPair', true)).toEqual({ value: 12, crossedOut: false });
+    // chance never doubles
     const dice = d(1, 2, 3, 4, 5);
     expect(previewCellScore(dice, 'chance', false)).toEqual({ value: 15, crossedOut: false });
-    expect(previewCellScore(dice, 'chance', true)).toEqual({ value: 30, crossedOut: false });
+    expect(previewCellScore(dice, 'chance', true)).toEqual({ value: 15, crossedOut: false });
   });
 
   it('bottom preview marks crossedOut correctly', () => {
@@ -296,9 +310,9 @@ describe('category id arrays', () => {
       'fullHouse',
       'fourOfAKind',
       'poker',
-      'chance',
       'odds',
       'evens',
+      'chance',
     ]);
   });
 });

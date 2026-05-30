@@ -335,11 +335,13 @@ export const useGameStore = create<GameState>()(
         setViewedPlayer: (playerId) => set({ viewedPlayerId: playerId }),
 
         scoreCell: (column, category) => {
-          const { dice, firstRoll, players, activePlayerId, rollsThisTurn, turnScored } = get();
-          // No scoring before the player has actually rolled this turn,
-          // and only one cell can be scored per turn (rest are locked
+          const { dice, firstRoll, players, activePlayerId, rollsThisTurn, turnScored, diceMode } = get();
+          // Only one cell can be scored per turn (rest are locked
           // until the next player takes over).
-          if (rollsThisTurn === 0 || turnScored) return;
+          if (turnScored) return;
+          // In virtual dice mode the player must roll at least once first;
+          // manual mode trusts the user to have already rolled IRL.
+          if (diceMode === 'auto' && rollsThisTurn === 0) return;
           const playerId = activePlayerId ?? players[0]?.playerId;
           if (!playerId) return;
           const player = players.find((p) => p.playerId === playerId);
@@ -439,7 +441,7 @@ export const useGameStore = create<GameState>()(
       };
     },
     {
-      name: 'kosciany-poker:v4',
+      name: 'kosciany-poker:v5',
       storage: createJSONStorage(() => localStorage),
       partialize: (s) => ({
         screen: s.screen,
