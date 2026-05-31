@@ -160,7 +160,8 @@ export function RulebookModal({ onClose }: RulebookModalProps) {
             </li>
             <li>
               <strong>Poker</strong> (five of a kind) · all five dice match.
-              Fixed <strong>50</strong>.
+              Score = <strong>50 + sum of dice</strong> (so 55 for all 1s,
+              60 for all 2s, … up to 80 for all 6s).
             </li>
             <li>
               <strong>Odds</strong> · requires <em>every</em> die to show an
@@ -172,9 +173,10 @@ export function RulebookModal({ onClose }: RulebookModalProps) {
             </li>
             <li>
               <strong>Chance</strong> · always scores; sum of all five dice.
-              Use it as a safety row — a poker rolled when both poker cells
-              are taken or crossed out can still be logged here. Chance is{' '}
-              <em>never</em> doubled by the ×2 marker.
+              If your dice form a five-of-a-kind and you log Chance (because
+              the Poker cells are taken or crossed out), Chance still pays
+              out the full poker value — <strong>50 + sum</strong>. Chance
+              is <em>never</em> doubled by the ×2 marker.
             </li>
           </ul>
           <p>

@@ -112,14 +112,18 @@ describe('bottom-section evaluators', () => {
     expect(evaluateBottomRaw('evens', d(1, 3, 5, 1, 3))).toEqual({ value: 0, crossedOut: true });
   });
 
-  it('poker (5 of a kind) = 50', () => {
-    expect(evaluateBottomRaw('poker', d(6, 6, 6, 6, 6))).toEqual({ value: 50, crossedOut: false });
+  it('poker (5 of a kind) = 50 + sum of dice', () => {
+    expect(evaluateBottomRaw('poker', d(1, 1, 1, 1, 1))).toEqual({ value: 55, crossedOut: false });
+    expect(evaluateBottomRaw('poker', d(2, 2, 2, 2, 2))).toEqual({ value: 60, crossedOut: false });
+    expect(evaluateBottomRaw('poker', d(6, 6, 6, 6, 6))).toEqual({ value: 80, crossedOut: false });
     expect(evaluateBottomRaw('poker', d(6, 6, 6, 6, 1))).toEqual({ value: 0, crossedOut: true });
   });
 
-  it('chance always scores sum, never crossed out', () => {
+  it('chance scores sum; a 5-of-a-kind into chance adds the poker bonus', () => {
     expect(evaluateBottomRaw('chance', d(1, 2, 3, 4, 5))).toEqual({ value: 15, crossedOut: false });
-    expect(evaluateBottomRaw('chance', d(6, 6, 6, 6, 6))).toEqual({ value: 30, crossedOut: false });
+    // poker into chance: 30 + 50 = 80
+    expect(evaluateBottomRaw('chance', d(6, 6, 6, 6, 6))).toEqual({ value: 80, crossedOut: false });
+    expect(evaluateBottomRaw('chance', d(1, 1, 1, 1, 1))).toEqual({ value: 55, crossedOut: false });
   });
 });
 
@@ -143,8 +147,16 @@ describe('first-roll multiplier', () => {
   });
 
   it('does NOT multiply Chance even when firstRoll is true', () => {
+    // Non-poker hand: chance is just the sum, no doubling.
+    const entry = buildBottomEntry('chance', d(1, 2, 3, 4, 5), true);
+    expect(entry.value).toBe(15);
+    expect(entry.firstRoll).toBe(false);
+  });
+
+  it('does NOT multiply Chance even for a poker-into-chance fallback', () => {
+    // 5 sixes into chance: sum 30 + poker bonus 50 = 80. No doubling.
     const entry = buildBottomEntry('chance', d(6, 6, 6, 6, 6), true);
-    expect(entry.value).toBe(30);
+    expect(entry.value).toBe(80);
     expect(entry.firstRoll).toBe(false);
   });
 

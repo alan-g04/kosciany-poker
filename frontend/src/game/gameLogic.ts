@@ -26,6 +26,9 @@ export const TOP_BONUS_BIG_REWARD = 100;
 export const BOTTOM_SECTION_UNLOCK_TOP_SCORES = 3;
 export const COLUMN_CLEAN_SWEEP_BONUS = 100;
 export const FIRST_ROLL_MULTIPLIER = 2;
+/** Fixed bonus added on top of the dice sum when 5-of-a-kind is logged
+ *  in Poker or in Chance (as a fallback). */
+export const POKER_BASE = 50;
 
 // ---------------------------------------------------------------------------
 // Dice helpers
@@ -176,9 +179,17 @@ export function evaluateBottomRaw(category: BottomCategoryId, dice: DiceRoll): B
         ? { value: 20, crossedOut: false }
         : bottomZero();
     case 'poker':
-      return maxCount(counts) >= 5 ? { value: 50, crossedOut: false } : bottomZero();
-    case 'chance':
-      return { value: sumDice(dice), crossedOut: false };
+      return maxCount(counts) >= 5
+        ? { value: POKER_BASE + sumDice(dice), crossedOut: false }
+        : bottomZero();
+    case 'chance': {
+      // Chance is the safety row: it always scores the sum of the dice, but
+      // a 5-of-a-kind logged here still pays out the full poker value so a
+      // late-game poker isn't wasted when both Poker cells are gone.
+      const base = sumDice(dice);
+      const bonus = maxCount(counts) >= 5 ? POKER_BASE : 0;
+      return { value: base + bonus, crossedOut: false };
+    }
     case 'odds':
       return allOdd(dice)
         ? { value: sumDice(dice), crossedOut: false }
